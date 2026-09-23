@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy"
+        content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:">
+  <title>Claude Sessions</title>
+  <link rel="stylesheet" href="../node_modules/@xterm/xterm/css/xterm.css">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <aside class="sidebar" aria-label="Sessions">
+    <div class="sidebar-head">
+      <span class="app-name">Sessions</span>
+      <button id="new-btn" class="new-btn" title="New session (Ctrl+Shift+N)">New session</button>
+    </div>
+    <ul id="session-list" class="session-list"></ul>
+    <div class="sidebar-foot">
+      <button id="presets-btn" class="link-btn">Edit launch presets</button>
+    </div>
+  </aside>
+
+  <main class="stage">
+    <header id="stage-bar" class="stage-bar" hidden>
+      <div class="bar-text">
+        <input id="active-name" class="active-name" aria-label="Session name" spellcheck="false">
+        <p id="active-cwd" class="active-cwd"></p>
+      </div>
+      <p id="active-detail" class="active-detail" hidden></p>
+      <button id="restart-btn" class="quiet-btn" title="Stop and resume this conversation">Restart</button>
+    </header>
+
+    <div id="terms" class="terms"></div>
+
+    <section id="empty" class="empty" hidden>
+      <p class="empty-lead">No sessions yet.</p>
+      <p>Start Claude Code in a project folder and it will appear in the side panel.</p>
+      <button id="empty-new" class="new-btn">New session</button>
+    </section>
+  </main>
+
+  <dialog id="new-dialog" class="new-dialog">
+    <form id="new-form" method="dialog">
+      <h2>New session</h2>
+
+      <label for="f-cwd">Project folder</label>
+      <div class="field-row">
+        <input id="f-cwd" placeholder="C:\src\my-project" spellcheck="false">
+        <button type="button" id="f-browse" class="quiet-btn">Browse</button>
+      </div>
+
+      <label for="f-name">Name</label>
+      <input id="f-name" placeholder="Defaults to the folder name">
+
+      <label for="f-preset">Start with</label>
+      <select id="f-preset"></select>
+
+      <p id="f-error" class="form-error" role="alert" hidden></p>
+
+      <div class="dialog-actions">
+        <button type="submit" value="cancel" formnovalidate class="quiet-btn">Cancel</button>
+        <button type="submit" value="create" class="primary-btn">Start session</button>
+      </div>
+    </form>
+  </dialog>
+
+  <script src="../node_modules/@xterm/xterm/lib/xterm.js"></script>
+  <script src="../node_modules/@xterm/addon-fit/lib/addon-fit.js"></script>
+  <script src="../node_modules/@xterm/addon-web-links/lib/addon-web-links.js"></script>
+  <script src="renderer.js"></script>
+</body>
+</html>
