@@ -11,7 +11,7 @@ const on = (channel, fn) => {
 contextBridge.exposeInMainWorld('sessions', {
   init: () => ipcRenderer.invoke('app:init'),
   presets: () => ipcRenderer.invoke('presets:list'),
-  editPresets: () => ipcRenderer.invoke('presets:edit'),
+  editSettings: () => ipcRenderer.invoke('settings:edit'),
   pickFolder: (defaultPath) => ipcRenderer.invoke('dialog:pickFolder', defaultPath),
 
   create: (opts) => ipcRenderer.invoke('session:create', opts),
@@ -30,4 +30,5 @@ contextBridge.exposeInMainWorld('sessions', {
   onData: (fn) => on('pty:data', fn),
   onStatus: (fn) => on('session:status', fn),
   onActivate: (fn) => on('session:activate', fn),
+  onSettings: (fn) => on('settings:changed', fn),
 });

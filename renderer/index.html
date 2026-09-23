@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta http-equiv="Content-Security-Policy"
         content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:">
-  <title>Claude Sessions</title>
+  <title>Manifold</title>
   <link rel="stylesheet" href="../node_modules/@xterm/xterm/css/xterm.css">
   <link rel="stylesheet" href="styles.css">
 </head>
@@ -16,7 +16,7 @@
     </div>
     <ul id="session-list" class="session-list"></ul>
     <div class="sidebar-foot">
-      <button id="presets-btn" class="link-btn">Edit launch presets</button>
+      <button id="settings-btn" class="link-btn">Edit settings</button>
     </div>
   </aside>
 
@@ -67,6 +67,7 @@
   <script src="../node_modules/@xterm/xterm/lib/xterm.js"></script>
   <script src="../node_modules/@xterm/addon-fit/lib/addon-fit.js"></script>
   <script src="../node_modules/@xterm/addon-web-links/lib/addon-web-links.js"></script>
+  <script src="../node_modules/@xterm/addon-unicode11/lib/addon-unicode11.js"></script>
   <script src="renderer.js"></script>
 </body>
 </html>

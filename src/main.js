@@ -7,7 +7,7 @@ const http = require('node:http');
 const crypto = require('node:crypto');
 const pty = require('@lydell/node-pty');
 
-app.setAppUserModelId('dev.patrick.claude-sessions');
+app.setAppUserModelId('dev.patrick.manifold');
 
 if (!app.requestSingleInstanceLock()) {
   app.quit();
@@ -15,7 +15,7 @@ if (!app.requestSingleInstanceLock()) {
 
 const DATA_DIR = app.getPath('userData');
 const WORKSPACE_FILE = path.join(DATA_DIR, 'workspace.json');
-const PRESETS_FILE = path.join(DATA_DIR, 'presets.json');
+const SETTINGS_FILE = path.join(DATA_DIR, 'settings.json');
 const HOOKS_DIR = path.join(DATA_DIR, 'hooks');
 const HOOK_TOKEN = crypto.randomBytes(16).toString('hex');
 
@@ -25,6 +25,12 @@ const DEFAULT_PRESETS = [
   { id: 'start-dev', name: 'Start dev (/start-dev)', args: [], prompt: '/start-dev' },
   { id: 'start-triage', name: 'Start triage (/start-triage)', args: [], prompt: '/start-triage' },
 ];
+
+const DEFAULT_SETTINGS = {
+  fontSize: 13,
+  fontFamily: '"Cascadia Mono", "Cascadia Code", Consolas, monospace',
+  lineHeight: 1.15,
+};
 
 // Claude Code hook event -> session status shown in the sidebar.
 const HOOK_STATUS = {
@@ -61,9 +67,13 @@ function writeJsonAtomic(file, data) {
   fs.renameSync(tmp, file);
 }
 
+function readSettingsFile() {
+  if (!fs.existsSync(SETTINGS_FILE)) writeJsonAtomic(SETTINGS_FILE, { ...DEFAULT_SETTINGS, presets: DEFAULT_PRESETS });
+  return readJson(SETTINGS_FILE, {}) || {};
+}
+
 function loadPresets() {
-  if (!fs.existsSync(PRESETS_FILE)) writeJsonAtomic(PRESETS_FILE, DEFAULT_PRESETS);
-  const raw = readJson(PRESETS_FILE, DEFAULT_PRESETS);
+  const raw = readSettingsFile().presets;
   const valid = Array.isArray(raw)
     ? raw.filter((p) => p && typeof p.id === 'string' && typeof p.name === 'string')
         .map((p) => ({
@@ -74,6 +84,16 @@ function loadPresets() {
         }))
     : [];
   return valid.length ? valid : DEFAULT_PRESETS;
+}
+
+function loadSettings() {
+  const raw = readSettingsFile();
+  const inRange = (v, min, max) => typeof v === 'number' && v >= min && v <= max;
+  return {
+    fontSize: inRange(raw.fontSize, 6, 72) ? raw.fontSize : DEFAULT_SETTINGS.fontSize,
+    fontFamily: typeof raw.fontFamily === 'string' && raw.fontFamily.trim() ? raw.fontFamily : DEFAULT_SETTINGS.fontFamily,
+    lineHeight: inRange(raw.lineHeight, 1, 3) ? raw.lineHeight : DEFAULT_SETTINGS.lineHeight,
+  };
 }
 
 let saveTimer = null;
@@ -249,7 +269,7 @@ function startSession(id, cols, rows, resume) {
       cols: Math.max(cols | 0, 20),
       rows: Math.max(rows | 0, 5),
       cwd: s.cwd,
-      env: { ...process.env, CLAUDE_SESSIONS_ID: id },
+      env: { ...process.env, MANIFOLD_SESSION_ID: id },
     });
   } catch (err) {
     setStatus(id, 'exited', err.message);
@@ -282,12 +302,13 @@ ipcMain.handle('app:init', () => ({
   sessions: workspace.sessions.map(publicSession),
   activeId: workspace.activeId,
   presets: loadPresets(),
+  settings: loadSettings(),
 }));
 
 ipcMain.handle('presets:list', () => loadPresets());
-ipcMain.handle('presets:edit', () => {
-  loadPresets(); // ensures the file exists
-  return shell.openPath(PRESETS_FILE);
+ipcMain.handle('settings:edit', () => {
+  readSettingsFile(); // ensures the file exists
+  return shell.openPath(SETTINGS_FILE);
 });
 
 ipcMain.handle('dialog:pickFolder', async (_e, defaultPath) => {
@@ -375,7 +396,7 @@ function createWindow() {
     y: b.y,
     minWidth: 820,
     minHeight: 480,
-    title: 'Claude Sessions',
+    title: 'Manifold',
     backgroundColor: '#1a212c',
     autoHideMenuBar: true,
     webPreferences: {
@@ -419,6 +440,8 @@ app.whenReady().then(async () => {
   for (const s of workspace.sessions) runtime.set(s.id, { status: 'stopped', detail: null, since: Date.now() });
 
   hookPort = await startHookServer();
+  loadSettings();
+  fs.watchFile(SETTINGS_FILE, { interval: 1000 }, () => send('settings:changed', loadSettings()));
   createWindow();
 });
 

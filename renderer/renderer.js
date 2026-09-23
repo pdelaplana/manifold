@@ -32,6 +32,7 @@ const TERM_THEME = {
 const entries = new Map(); // id -> { id, session, term, fit, el }
 let order = [];
 let activeId = null;
+let settings = {};
 
 // ---------- terminals ----------
 
@@ -41,16 +42,20 @@ function createEntry(session) {
   $('terms').append(el);
 
   const term = new Terminal({
-    fontFamily: '"Cascadia Mono", "Cascadia Code", Consolas, monospace',
-    fontSize: 13,
-    lineHeight: 1.15,
+    fontFamily: settings.fontFamily,
+    fontSize: settings.fontSize,
+    lineHeight: settings.lineHeight,
     cursorBlink: true,
     scrollback: 10000,
     theme: TERM_THEME,
+    allowProposedApi: true,
   });
   const fit = new FitAddon.FitAddon();
   term.loadAddon(fit);
   term.loadAddon(new WebLinksAddon.WebLinksAddon((_e, uri) => window.open(uri)));
+  // Emoji are two cells wide; xterm's default Unicode 6 widths count them as one.
+  term.loadAddon(new Unicode11Addon.Unicode11Addon());
+  term.unicode.activeVersion = '11';
   term.open(el);
 
   const entry = { id: session.id, session, term, fit, el, cols: 0, rows: 0 };
@@ -216,7 +221,7 @@ function renderBar() {
 
 function renderTitle() {
   const waiting = [...entries.values()].filter((e) => e.session.status === 'needs').length;
-  document.title = waiting ? `Claude Sessions (${waiting} need you)` : 'Claude Sessions';
+  document.title = waiting ? `Manifold (${waiting} need you)` : 'Manifold';
 }
 
 function render() {
@@ -330,7 +335,7 @@ document.addEventListener('keydown', (e) => {
 
 $('new-btn').addEventListener('click', openNewDialog);
 $('empty-new').addEventListener('click', openNewDialog);
-$('presets-btn').addEventListener('click', () => api.editPresets());
+$('settings-btn').addEventListener('click', () => api.editSettings());
 $('restart-btn').addEventListener('click', restartActive);
 
 const nameInput = $('active-name');
@@ -364,6 +369,17 @@ api.onStatus((id, state) => {
 
 api.onActivate((id) => select(id));
 
+api.onSettings((next) => {
+  settings = next;
+  for (const entry of entries.values()) {
+    entry.term.options.fontFamily = settings.fontFamily;
+    entry.term.options.fontSize = settings.fontSize;
+    entry.term.options.lineHeight = settings.lineHeight;
+  }
+  const entry = entries.get(activeId);
+  if (entry) fitEntry(entry);
+});
+
 new ResizeObserver(() => {
   const entry = entries.get(activeId);
   if (entry) fitEntry(entry);
@@ -372,7 +388,8 @@ new ResizeObserver(() => {
 setInterval(renderList, 30_000);
 
 (async function boot() {
-  const { sessions, activeId: savedActive } = await api.init();
+  const { sessions, activeId: savedActive, settings: saved } = await api.init();
+  settings = saved;
   const created = sessions.map(createEntry);
 
   const first = entries.has(savedActive) ? savedActive : created[0]?.id;

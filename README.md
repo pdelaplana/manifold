@@ -1,4 +1,4 @@
-# Claude Sessions
+# Manifold
 
 A small Windows desktop app for running several Claude Code sessions at once. Sessions live in a side panel with a live status, and the app tells you when one of them is blocked on you.
 
@@ -42,25 +42,32 @@ Rename a session by clicking its name in the top bar. **Restart** stops the sess
 | Ctrl+V | Paste |
 | Shift+Enter | New line in the Claude prompt |
 
-## Launch presets
+## Settings
 
-Presets live in `%APPDATA%\Claude Sessions\presets.json`. The **Edit launch presets** link opens it. Changes apply to the next session you create.
+Settings live in `%APPDATA%\Manifold\settings.json`. The **Edit settings** link opens it.
 
 ```json
-[
-  { "id": "fresh", "name": "New conversation", "args": [] },
-  { "id": "continue", "name": "Continue last conversation in this folder", "args": ["--continue"] },
-  { "id": "start-dev", "name": "Start dev (/start-dev)", "args": [], "prompt": "/start-dev" },
-  { "id": "start-triage", "name": "Start triage (/start-triage)", "args": [], "prompt": "/start-triage" },
-  { "id": "opus-plan", "name": "Opus in plan mode", "args": ["--model", "opus", "--permission-mode", "plan"] }
-]
+{
+  "fontSize": 13,
+  "fontFamily": "\"Cascadia Mono\", \"Cascadia Code\", Consolas, monospace",
+  "lineHeight": 1.15,
+  "presets": [
+    { "id": "fresh", "name": "New conversation", "args": [] },
+    { "id": "continue", "name": "Continue last conversation in this folder", "args": ["--continue"] },
+    { "id": "start-dev", "name": "Start dev (/start-dev)", "args": [], "prompt": "/start-dev" },
+    { "id": "start-triage", "name": "Start triage (/start-triage)", "args": [], "prompt": "/start-triage" },
+    { "id": "opus-plan", "name": "Opus in plan mode", "args": ["--model", "opus", "--permission-mode", "plan"] }
+  ]
+}
 ```
 
-`args` are passed straight to `claude`. `prompt` is sent as the opening message.
+`fontSize`, `fontFamily` and `lineHeight` set the terminal text. When you save the file, all open terminals update. `fontSize` must be from 6 to 72, and `lineHeight` must be from 1 to 3. If a value is missing or out of range, the app uses the default.
+
+`presets` are the launch presets in the new-session dialog. Changes apply to the next session you create. `args` are passed straight to `claude`. `prompt` is sent as the opening message.
 
 ## Restoring sessions
 
-The session list is saved to `%APPDATA%\Claude Sessions\workspace.json`. On relaunch every session comes back and resumes its own conversation with `claude --resume <id>`. The app learns each conversation's id from Claude's hooks, so two sessions in the same folder don't collide. A session that never reached Claude falls back to `--continue`. Terminal scrollback is not restored. The conversation is.
+The session list is saved to `%APPDATA%\Manifold\workspace.json`. On relaunch every session comes back and resumes its own conversation with `claude --resume <id>`. The app learns each conversation's id from Claude's hooks, so two sessions in the same folder don't collide. A session that never reached Claude falls back to `--continue`. Terminal scrollback is not restored. The conversation is.
 
 ## How status works
 
