@@ -13,6 +13,8 @@ npm start
 
 `@lydell/node-pty` ships prebuilt Windows binaries, so you don't need Visual Studio build tools. To build an installer, run `npm run dist`. The installer lands in `dist\`.
 
+To start the app from your source without a terminal, run `npm run shortcut`. It creates a "Manifold (dev)" shortcut in the repo folder. The dev copy has its own app ID, so it gets its own taskbar button next to an installed Manifold.
+
 ## Using it
 
 Press **New session** (or Ctrl+Shift+N), pick a project folder, and choose how Claude should start. Each session runs `claude` inside its own PowerShell, and PowerShell stays open if Claude exits so you can rerun it by hand.

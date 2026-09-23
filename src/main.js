@@ -7,7 +7,8 @@ const http = require('node:http');
 const crypto = require('node:crypto');
 const pty = require('@lydell/node-pty');
 
-app.setAppUserModelId('dev.patrick.manifold');
+// A separate ID keeps the dev copy apart from the installed app in Start and on the taskbar.
+app.setAppUserModelId(app.isPackaged ? 'dev.patrick.manifold' : 'dev.patrick.manifold.dev');
 
 if (!app.requestSingleInstanceLock()) {
   app.quit();

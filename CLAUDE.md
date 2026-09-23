@@ -10,7 +10,10 @@ The app is Windows-only. It needs Node.js 20 or newer, and `claude` must run fro
 npm install      # @lydell/node-pty ships prebuilt Windows binaries, no build tools needed
 npm start        # electron .
 npm run dist     # electron-builder --win nsis, output goes to dist\
+npm run shortcut # "Manifold (dev)" shortcut in the repo root
 ```
+
+The unpackaged app uses the app ID `dev.patrick.manifold.dev`, and the installed app uses `dev.patrick.manifold`. The ID in `scripts/create-shortcut.ps1` must match the unpackaged ID in `src/main.js`.
 
 There are no tests, no linter and no build step for the source. The renderer loads plain scripts and the xterm CSS directly from `node_modules`.
 
