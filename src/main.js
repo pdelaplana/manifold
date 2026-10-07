@@ -383,7 +383,10 @@ ipcMain.on('pty:resize', (_e, id, cols, rows) => {
   }
 });
 
-ipcMain.handle('clipboard:read', () => clipboard.readText());
+ipcMain.handle('clipboard:read', async () => ({
+  text: await clipboard.readText(),
+  hasImage: await clipboard.has('image/png'),
+}));
 ipcMain.on('clipboard:write', (_e, text) => clipboard.writeText(String(text)));
 
 // ---------- window ----------
