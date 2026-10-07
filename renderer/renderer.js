@@ -61,6 +61,8 @@ function createEntry(session) {
   const entry = { id: session.id, session, term, fit, el, cols: 0, rows: 0 };
   term.onData((data) => api.write(session.id, data));
   term.attachCustomKeyEventHandler((e) => terminalKey(entry, e));
+  el.addEventListener('dragover', (e) => e.preventDefault());
+  el.addEventListener('drop', (e) => dropFiles(entry, e));
 
   entries.set(session.id, entry);
   order.push(session.id);
@@ -102,7 +104,11 @@ function terminalKey(entry, e) {
 
   if (ctrl && e.key.toLowerCase() === 'v') {
     e.preventDefault();
-    api.readClipboard().then((text) => { if (text) entry.term.paste(text); });
+    api.readClipboard().then(({ text, hasImage }) => {
+      if (text) entry.term.paste(text);
+      // Alt+V makes Claude Code on Windows read the image from the system clipboard itself.
+      else if (hasImage) api.write(entry.id, '\x1bv');
+    });
     return false;
   }
 
@@ -114,6 +120,15 @@ function terminalKey(entry, e) {
   }
 
   return true;
+}
+
+// Pastes the dropped file paths, the same as Windows Terminal. Claude Code attaches an image path as an image.
+function dropFiles(entry, e) {
+  e.preventDefault();
+  const paths = [...e.dataTransfer.files].map((file) => api.pathForFile(file)).filter(Boolean);
+  if (!paths.length) return;
+  entry.term.paste(paths.map((p) => (p.includes(' ') ? `"${p}"` : p)).join(' '));
+  entry.term.focus();
 }
 
 // ---------- selection ----------

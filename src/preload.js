@@ -1,6 +1,6 @@
 'use strict';
 
-const { contextBridge, ipcRenderer } = require('electron');
+const { contextBridge, ipcRenderer, webUtils } = require('electron');
 
 const on = (channel, fn) => {
   const handler = (_event, ...args) => fn(...args);
@@ -26,6 +26,7 @@ contextBridge.exposeInMainWorld('sessions', {
 
   readClipboard: () => ipcRenderer.invoke('clipboard:read'),
   writeClipboard: (text) => ipcRenderer.send('clipboard:write', text),
+  pathForFile: (file) => webUtils.getPathForFile(file),
 
   onData: (fn) => on('pty:data', fn),
   onStatus: (fn) => on('session:status', fn),
